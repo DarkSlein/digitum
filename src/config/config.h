@@ -12,7 +12,7 @@
 #define FLAT_NUMBER_MQTT_TOPIC "/digitum/intercom_bridge4823/out/flat_number"
 #define STATE_MQTT_TOPIC "/digitum/intercom_bridge4823/out/state"
 
-#define LEDS_PIN 32
+#define LED_PIN 32
 #define DRY_CONT_PIN 15
 #define DOOR_SENS_PIN 114
 

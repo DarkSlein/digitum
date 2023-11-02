@@ -10,6 +10,7 @@
 #include "config/config.h"
 #include "infra/eth.h"
 #include "infra/mqtt.h"
+#include "infra/led.h"
 #include "domain/stateMachine.h"
 
 uint32_t lastMillis;
@@ -28,13 +29,16 @@ void setup() {
     initMQTT();
 
     pinMode(DATA_PIN, INPUT);
-
+    pinMode(LED_PIN, OUTPUT);
     pinMode(DRY_CONT_PIN, OUTPUT);
-    digitalWrite(DRY_CONT_PIN, 0);
+
+    digitalWrite(LED_PIN, HIGH);
+
+    digitalWrite(DRY_CONT_PIN, LOW);
     delay(2000);
-    digitalWrite(DRY_CONT_PIN, 1);
+    digitalWrite(DRY_CONT_PIN, HIGH);
     delay(2000);
-    digitalWrite(DRY_CONT_PIN, 0);
+    digitalWrite(DRY_CONT_PIN, LOW);
     delay(2000);
 }
 
