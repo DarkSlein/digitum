@@ -1,4 +1,29 @@
-#include "stateMachine.h"
+#include "utils/print.h"
+#include "config/config.h"
+#include "infra/mqtt.h"
+#include "domain/stateMachine.h"
+
+State currentState = NOT_CONNECTED;
+int countZeros = 0;
+int countOnes = 0;
+
+int previousData = 0;
+int dataLength = 0;
+int signalDuration = 0;
+
+void resetCounters() {
+  countZeros = 0;
+  countOnes = 0;
+
+  previousData = 0;
+  dataLength = 0;
+  signalDuration = 0;
+}
+
+void writeState(char* message) {
+  println(message);
+  publishToMQTT(STATE_MQTT_TOPIC, message);
+}
 
 void updateStateMachine(int data) {
   switch (currentState) {
@@ -7,7 +32,7 @@ void updateStateMachine(int data) {
         // Stay in the NOT_CONNECTED state
       } else if (data == 1) {
         currentState = CONNECTED;
-        println("connected");
+        writeState("connected");
       }
       break;
 
@@ -16,13 +41,13 @@ void updateStateMachine(int data) {
         countZeros++;
         if (countZeros >= NOT_CONNECTED_THRESHOLD) {
           currentState = NOT_CONNECTED;
-          println("not connected");
+          writeState("not connected");
           resetCounters();
         }
       } else if (data == 1) {
         if (countZeros >= INITIALIZING_CALL_THRESHOLD) {
           currentState = RECEIVING_DATA;
-          println("receiving data");
+          writeState("receiving data");
           resetCounters();
         }
       }
@@ -44,10 +69,9 @@ void updateStateMachine(int data) {
         if (countZeros >= DATA_RECEIVED_THESHOLD) {
           println("| data length: ", dataLength);
           println("| flat: ", dataLength/2);
-          //sendDataToMQTT(dataLength/2);
-
+          publishToMQTT(FLAT_NUMBER_MQTT_TOPIC, dataLength/2);
+          
           currentState = DATA_RECEIVED;
-          println("data received");
           resetCounters();
         }
       } else if (data == 1) {
@@ -55,7 +79,7 @@ void updateStateMachine(int data) {
         countOnes++;
         if (countOnes >= CONNECTED_THRESHOLD) {
           currentState = CONNECTED;
-          println("connected");
+          writeState("connected");
           resetCounters();
         }
       }
@@ -66,14 +90,14 @@ void updateStateMachine(int data) {
         countZeros++;
         if (countZeros >= CALL_ENDED_THRESHOLD) {
           currentState = CALL_ENDED;
-          println("call ended");
+          writeState("call ended");
           resetCounters();
         }
       } else if (data == 1) {
         countOnes++;
         if (countOnes >= CONNECTED_THRESHOLD) {
           currentState = CONNECTED;
-          println("connected");
+          writeState("connected");
           resetCounters();
         }
       break;
@@ -84,14 +108,14 @@ void updateStateMachine(int data) {
         countZeros++;
         if (countZeros >= NOT_CONNECTED_THRESHOLD) {
           currentState = NOT_CONNECTED;
-          println("not connected");
+          writeState("not connected");
           resetCounters();
         }
       } else if (data == 1) {
         countOnes++;
         if (countOnes >= CONNECTED_THRESHOLD) {
           currentState = CONNECTED;
-          println("connected");
+          writeState("connected");
           resetCounters();
         }
       break;

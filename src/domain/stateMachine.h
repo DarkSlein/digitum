@@ -2,7 +2,6 @@
 #define STATE_MACHINE_H
 
 #include <Arduino.h>
-#include "utils/print.cpp"
 
 #define CONNECTED_THRESHOLD 50000
 #define NOT_CONNECTED_THRESHOLD 50000
@@ -17,15 +16,6 @@ enum State {
   DATA_RECEIVED,
   CALL_ENDED
 };
-
-int data = 0;
-State currentState = NOT_CONNECTED;
-int countZeros = 0;
-int countOnes = 0;
-
-int previousData = 0;
-int dataLength = 0;
-int signalDuration = 0;
 
 void resetCounters();
 void updateStateMachine(int data);
