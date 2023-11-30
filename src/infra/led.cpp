@@ -1,6 +1,3 @@
-#include <Arduino.h>
-
-#include "config/config.h"
 #include "infra/led.h"
 
 void ledTurnOn() {

@@ -28,5 +28,13 @@
 #define NRST            5
 
 void WiFiEvent(WiFiEvent_t event);
-void connectEth();
+void initEth();
 void testClient(const char * host, uint16_t port);
+void setEthConfig(
+   bool isStatic, 
+   String localIp, 
+   String gateway,
+   String subnet, 
+   String dns1="", 
+   String dns2=""
+);

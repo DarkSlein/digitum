@@ -1,5 +1,9 @@
+#include <ArduinoJson.h>
 #include "infra/eth.h"
+#include "infra/fs.h"
 #include "infra/mqtt.h"
+#include "config/config.h"
+#include "utils/print.h"
 
 extern bool eth_connected;
 TimerHandle_t ethReconnectTimer;
@@ -28,6 +32,7 @@ void WiFiEvent(WiFiEvent_t event)
         Serial.print(ETH.linkSpeed());
         Serial.println("Mbps");
         eth_connected = true;
+        delay(2000);
         connectToMqtt();
         break;
     case ARDUINO_EVENT_ETH_DISCONNECTED:
@@ -78,7 +83,28 @@ void WiFiEvent(WiFiEvent_t event)
 #endif
 }
 
-void connectEth() {
+bool loadEthConfig() {
+  DynamicJsonDocument doc(1024);
+
+  bool success = readJsonVariantFromFile(NETWORK_SETTINGS_PATH, doc);
+
+  if (!success)
+    return false;
+
+  JsonVariant root = doc.as<JsonVariant>();
+
+  setEthConfig(
+    root["static_ip_config"].as<bool>(),
+    root["local_ip"].as<String>(),
+    root["gateway_ip"].as<String>(),
+    root["subnet_mask"].as<String>(),
+    root["dns_ip"].as<String>()
+  );
+
+  return true;
+}
+
+void initEth() {
     pinMode(NRST, OUTPUT);
     digitalWrite(NRST, 0);
     delay(200);
@@ -95,6 +121,14 @@ void connectEth() {
               ETH_MDIO_PIN,
               ETH_TYPE,
               ETH_CLK_MODE);
+
+    if (!loadEthConfig() && DEFAULT_STATIC_LOCAL_IP) {
+        ETH.config(
+            DEFAULT_STATIC_LOCAL_IP,
+            DEFAULT_STATIC_GATEWAY,
+            DEFAULT_STATIC_SUBNET
+        );
+    }
 }
 
 void testClient(const char * host, uint16_t port)
@@ -115,4 +149,31 @@ void testClient(const char * host, uint16_t port)
 
   Serial.println("closing connection\n");
   client.stop();
+}
+
+void setEthConfig(bool isStatic, String localIp, String gateway,
+String subnet, String dns1, String dns2) {
+    IPAddress newLocalIp = IPAddress();
+    IPAddress newGateway = IPAddress();
+    IPAddress newSubnet = IPAddress();
+    IPAddress newDns1 = IPAddress();
+    IPAddress newDns2 = IPAddress();
+
+    newLocalIp.fromString(localIp);
+    newGateway.fromString(gateway);
+    newSubnet.fromString(subnet);
+    newDns1.fromString(dns1);
+    newDns2.fromString(dns2);
+
+    if (isStatic)
+        ETH.config(
+            newLocalIp,
+            newGateway,
+            newSubnet,
+            newDns1,
+            newDns2
+        );
+    else {
+        ETH.config((uint32_t)0, (uint32_t)0, (uint32_t)0);
+    }
 }

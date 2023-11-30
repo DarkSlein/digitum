@@ -8,10 +8,16 @@
 
 #include "utils/print.h"
 #include "config/config.h"
+
 #include "infra/eth.h"
 #include "infra/mqtt.h"
 #include "infra/led.h"
+#include "infra/relay.h"
+#include "infra/fs.h"
+#include "infra/httpServer.h"
+
 #include "domain/stateMachine.h"
+#include "app/routes.h"
 
 uint32_t lastMillis;
 uint64_t lastMicros;
@@ -21,25 +27,28 @@ bool eth_connected = false;
 int data = 0;
 
 void setup() {
-    Serial.begin(115200);
+  Serial.begin(115200);
 
-    WiFi.onEvent(WiFiEvent);
+  WiFi.onEvent(WiFiEvent);  
 
-    connectEth();
-    initMQTT();
+  pinMode(DATA_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(DRY_CONT_PIN, OUTPUT);
 
-    pinMode(DATA_PIN, INPUT);
-    pinMode(LED_PIN, OUTPUT);
-    pinMode(DRY_CONT_PIN, OUTPUT);
+  digitalWrite(LED_PIN, HIGH);
 
-    digitalWrite(LED_PIN, HIGH);
+  relayTurnOn();
+  delay(2000);
+  relayTurnOff();
+  delay(2000);
+  relayTurnOn();
+  delay(2000);
 
-    digitalWrite(DRY_CONT_PIN, LOW);
-    delay(2000);
-    digitalWrite(DRY_CONT_PIN, HIGH);
-    delay(2000);
-    digitalWrite(DRY_CONT_PIN, LOW);
-    delay(2000);
+  initFileSystem();
+  initEth();
+  initMQTT();
+  initRoutes();
+  initHttpServer();
 }
 
 void loop() {
