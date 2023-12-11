@@ -24,7 +24,7 @@ bool readJsonVariantFromFile(const char* file_path, DynamicJsonDocument& jsonDoc
   }
 
   String fileContent = file.readString(); 
-  println("Reading config: ", fileContent);
+  println("Reading config: ", file_path, ", content:", fileContent);
 
   DeserializationError error = deserializeJson(jsonDoc, fileContent);
 
@@ -62,10 +62,32 @@ bool writeJsonVariantToFile(const char* file_path, JsonVariant& jsonVariant) {
 
   String jsonString;
   serializeJson(jsonVariant, jsonString);
-  println("Writing config: ", jsonString);
+  println("Writing config: ", file_path, ", content:", jsonString);
   file.print(jsonString);
 
   file.close();
 
   return true;
+}
+
+void deleteFilesInDir(const char* path) {
+  File dir = LittleFS.open(path);
+  if (!dir.isDirectory()) {
+    Serial.println("Not a directory");
+    return;
+  }
+
+  File file = dir.openNextFile();
+  while (file) {
+    String fullPath = String(path) + '/' +  String(file.name());
+    if (file.isDirectory()) {
+      deleteFilesInDir(fullPath.c_str());
+    } else {
+      file.close();
+      LittleFS.remove(fullPath);
+    }
+
+    file = dir.openNextFile();
+  }
+  dir.close();
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ETH.h>
+#include <ArduinoJson.h>
 
 /*
    * ETH_CLOCK_GPIO0_IN   - default: external clock from crystal oscillator
@@ -30,7 +31,9 @@
 void WiFiEvent(WiFiEvent_t event);
 void initEth();
 void testClient(const char * host, uint16_t port);
-void setEthConfig(
+bool checkHost(const char* host, uint16_t port);
+void getEthStatus(JsonObject& root);
+void configureEth(
    bool isStatic, 
    String localIp, 
    String gateway,
@@ -38,3 +41,5 @@ void setEthConfig(
    String dns1="", 
    String dns2=""
 );
+void configureEth(JsonVariant& root);
+void getDefaultEthConf(JsonVariant& root);

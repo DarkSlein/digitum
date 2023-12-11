@@ -5,3 +5,4 @@
 void initFileSystem();
 bool readJsonVariantFromFile(const char* filename, DynamicJsonDocument& jsonDoc);
 bool writeJsonVariantToFile(const char* filename, JsonVariant& jsonObj);
+void deleteFilesInDir(const char* path);

@@ -19,5 +19,7 @@ enum State {
 
 void resetCounters();
 void updateStateMachine(int data);
+void initStateMachine();
+void changeState(State state, bool resetCountersFlag=true);
 
 #endif // STATE_MACHINE_H

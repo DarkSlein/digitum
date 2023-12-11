@@ -22,9 +22,9 @@
 uint32_t lastMillis;
 uint64_t lastMicros;
 
-bool eth_connected = false;
-
 int data = 0;
+
+bool flag = false;
 
 void setup() {
   Serial.begin(115200);
@@ -44,6 +44,7 @@ void setup() {
   relayTurnOn();
   delay(2000);
 
+  //initStateMachine();
   initFileSystem();
   initEth();
   initMQTT();
@@ -59,11 +60,21 @@ void loop() {
     if (PRINT_RAW_SIGNAL_FLAG)
       printf("{}", data);
 
-    lastMillis = micros() + DATA_PERIOD;
+    lastMicros = micros() + DATA_PERIOD;
   }
 
-  if (eth_connected) {
-    if (lastMillis < millis()) {;
+  if (true) {
+    if (lastMillis < millis()) {
+      if (getMqttEnabled() && !getMqttConnected()) {
+        reconnectMQTTIfNeeded();
+      }
+      /*if (flag) {
+        changeState(RECEIVING_DATA);
+        flag = false;
+      } else {
+        changeState(CONNECTED);
+        flag = true;
+      }*/
       lastMillis = millis() + 3000;
     }
   }

@@ -38,7 +38,7 @@ void receiveData(int data) {
   previousData = data;
 }
 
-void changeState(State state, bool resetCountersFlag=true) {
+void changeState(State state, bool resetCountersFlag) {
   currentState = state;
 
   switch (state) {
@@ -139,4 +139,8 @@ void updateStateMachine(int data) {
       break;
       }
   }
+}
+
+void initStateMachine() {
+  changeState(CONNECTED);
 }
