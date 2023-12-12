@@ -1,0 +1,4 @@
+def replace_binary_string(input_string):
+    result_string = input_string.replace("11111111111111111111111111111111111111111111111", "1")
+    result_string = result_string.replace("00000000000000000000000000000000000000000000000", "0")
+    return result_string

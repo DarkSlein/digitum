@@ -2,7 +2,7 @@
 #include "config/config.h"
 #include "infra/mqtt.h"
 #include "infra/led.h"
-#include "domain/stateMachine.h"
+#include "domain/stateMachineVizit.h"
 
 State currentState = NOT_CONNECTED;
 int countZeros = 0;
@@ -26,7 +26,7 @@ void writeState(char* message) {
   publishToMQTT(STATE_MQTT_TOPIC, message);
 }
 
-void receiveData(int data) {
+void receiveDigit(int data) {
   if (data != previousData) {
     if (previousData == HIGH) {
       dataLength++;
@@ -50,7 +50,7 @@ void changeState(State state, bool resetCountersFlag=true) {
       ledTurnOn();
       writeState("connected");
       break;
-    case RECEIVING_DATA:
+    case RECEIVING_FIRST_DIGIT:
       writeState("receiving data");
       break;
   }
@@ -87,24 +87,23 @@ void updateStateMachine(int data) {
         }
       } else if (data == HIGH) {
         if (countZeros >= INITIALIZING_CALL_THRESHOLD) {
-          changeState(RECEIVING_DATA);
+          changeState(RECEIVING_FIRST_DIGIT);
         }
       }
       break;
 
-    case RECEIVING_DATA:
-      receiveData(data);
+    case RECEIVING_FIRST_DIGIT:
+      receiveDigit(data);
 
       if (data == LOW) {
         countOnes = 0;
         countZeros++;
-        if (countZeros >= DATA_RECEIVED_THESHOLD) {
-          flatReceived();
-          changeState(DATA_RECEIVED);
-        }
       } else if (data == HIGH) {
         countZeros = 0;
         countOnes++;
+        if (countOnes >= DATA_RECEIVED_THESHOLD) {
+          changeState(CONNECTED);
+        }
         if (countOnes >= CONNECTED_THRESHOLD) {
           changeState(CONNECTED);
         }

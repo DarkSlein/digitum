@@ -159,6 +159,9 @@ uint8_t *data, size_t len, size_t index, size_t total) {
   bool fileLoaded = writeJsonVariantToFile(MQTT_SETTINGS_PATH, root);
   bool enabled = root["enabled"].as<bool>();
 
+  if (!loadMqttConfig())
+    println("Cannot load MQTT config");
+
   bool mqttConfigured = configureMqtt(
     root["enabled"].as<bool>(),
     root["host"].as<String>(),

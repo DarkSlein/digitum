@@ -21,6 +21,7 @@ AsyncMqttClient& getMqttClient();
 AsyncMqttClientDisconnectReason& getMqttDisconnectReason();
 bool getMqttConnected();
 bool getMqttEnabled();
+bool loadMqttConfig();
 bool configureMqtt(
   bool enabled,
   String host,

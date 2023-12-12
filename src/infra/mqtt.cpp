@@ -9,6 +9,7 @@ TimerHandle_t mqttReconnectTimer;
 AsyncMqttClientDisconnectReason mqttDisconnectReason;
 
 DynamicJsonDocument mqttConf(1024);
+String mqttOutputJson = "";
 bool mqttConnected = false;
 bool mqttEnabled = true;
 
@@ -19,25 +20,71 @@ char* retainedClientId;
 char* retainedUsername;
 char* retainedPassword;
 
+template <typename T>
+void publishJSONToMQTT(const char* topic, T message) {
+  DynamicJsonDocument doc(8192);
+  DeserializationError error = deserializeJson(doc, mqttOutputJson);
+
+  doc[topic] = message;
+
+  mqttOutputJson = "";
+  serializeJson(doc, mqttOutputJson);
+
+  if (PRINT_MQTT_DEBUG_FLAG)
+    println("Sending to MQTT topic '", JSON_TOPIC_PATH, "': ", mqttOutputJson);
+  mqttClient.publish(JSON_TOPIC_PATH, 2, true, mqttOutputJson.c_str());
+}
+
+const char* getFullTopic(const char* topic) {
+  return (String(DEFAULT_OUTPUT_TOPIC_PATH) + String(topic)).c_str();
+}
+
 void publishToMQTT(const char* topic, const char* message) {
-  mqttClient.publish(topic, 2, true, message);
+  const char* fullTopic = getFullTopic(topic);
+ 
+  if (PRINT_MQTT_DEBUG_FLAG)
+    println("Sending to MQTT topic '", fullTopic, "': ", message);
+
+  mqttClient.publish(fullTopic, 2, true, message);
+  publishJSONToMQTT(topic, message);
 }
 
 void publishToMQTT(const char* topic, int message) {
+  const char* fullTopic = getFullTopic(topic);
+ 
+  if (PRINT_MQTT_DEBUG_FLAG)
+    println("Sending to MQTT topic '", fullTopic, "': ", message);
+
   char num_char[10];
   sprintf(num_char, "%d", message);
   mqttClient.publish(topic, 2, true, num_char);
+
+  publishJSONToMQTT(topic, message);
 }
 
 void publishToMQTT(const char* topic, float message) {
+  const char* fullTopic = getFullTopic(topic);
+ 
+  if (PRINT_MQTT_DEBUG_FLAG)
+    println("Sending to MQTT topic '", fullTopic, "': ", message);
+
   char num_char[10];
   dtostrf(message, 1, 2, num_char); // Convert float to string
   mqttClient.publish(topic, 2, true, num_char);
+
+  publishJSONToMQTT(topic, message);
 }
 
 void publishToMQTT(const char* topic, bool message) {
+  const char* fullTopic = getFullTopic(topic);
+ 
+  if (PRINT_MQTT_DEBUG_FLAG)
+    println("Sending to MQTT topic '", fullTopic, "': ", message);
+
   const char* bool_str = message ? "true" : "false";
   mqttClient.publish(topic, 2, true, bool_str);
+
+  publishJSONToMQTT(topic, message);
 }
 
 void onMqttConnect(bool sessionPresent) {

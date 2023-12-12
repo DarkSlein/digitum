@@ -16,21 +16,25 @@
 
 #define SERIAL_NUMBER "4823"
 
-#define MAC_ADDRESS_MQTT_TOPIC "/digitum/intercom_bridge4823/out/mac"
-#define IP_ADDRESS_MQTT_TOPIC "/digitum/intercom_bridge4823/out/ip"
-#define SERIAL_NUMBER_MQTT_TOPIC "/digitum/intercom_bridge4823/out/sn"
+#define DEFAULT_OUTPUT_TOPIC_PATH "/digitum/intercom_bridge4823/out/"
+#define JSON_TOPIC_PATH "/digitum/intercom_bridge4823/out/json"
 
-#define FLAT_NUMBER_MQTT_TOPIC "/digitum/intercom_bridge4823/out/flat_number"
-#define STATE_MQTT_TOPIC "/digitum/intercom_bridge4823/out/state"
+#define MAC_ADDRESS_MQTT_TOPIC "mac"
+#define IP_ADDRESS_MQTT_TOPIC "ip"
+#define SERIAL_NUMBER_MQTT_TOPIC "sn"
+
+#define FLAT_NUMBER_MQTT_TOPIC "flat_number"
+#define STATE_MQTT_TOPIC "state"
 
 #define LED_PIN 32
 #define DRY_CONT_PIN 15
 #define DOOR_SENS_PIN 114
 
 #define DATA_PIN 12
-#define DATA_PERIOD 120 // microseconds
+#define DATA_PERIOD 1 // microseconds
 
-#define PRINT_RAW_SIGNAL_FLAG 1
+#define PRINT_RAW_SIGNAL_FLAG 0
+#define PRINT_MQTT_DEBUG_FLAG 0
 
 #define MAX_FEATURES_SIZE 256
 #define MAX_NETWORK_STATUS_SIZE 1024
