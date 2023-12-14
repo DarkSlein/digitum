@@ -57,7 +57,7 @@ void publishToMQTT(const char* topic, int message) {
 
   char num_char[10];
   sprintf(num_char, "%d", message);
-  mqttClient.publish(topic, 2, true, num_char);
+  mqttClient.publish(fullTopic, 2, true, num_char);
 
   publishJSONToMQTT(topic, message);
 }
@@ -70,7 +70,7 @@ void publishToMQTT(const char* topic, float message) {
 
   char num_char[10];
   dtostrf(message, 1, 2, num_char); // Convert float to string
-  mqttClient.publish(topic, 2, true, num_char);
+  mqttClient.publish(fullTopic, 2, true, num_char);
 
   publishJSONToMQTT(topic, message);
 }

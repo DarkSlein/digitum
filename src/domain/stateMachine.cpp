@@ -12,23 +12,26 @@ int previousData = 0;
 int dataLength = 0;
 int signalDuration = 0;
 
+int flat = 0;
+
 void resetCounters() {
   countZeros = 0;
   countOnes = 0;
 
   previousData = 0;
-  dataLength = 0;
+  dataLength = 1;
   signalDuration = 0;
 }
 
 void writeState(char* message) {
-  println(message);
+  //println(message);
   publishToMQTT(STATE_MQTT_TOPIC, message);
 }
 
-void receiveData(int data) {
+void receiveDigit(int data) {
   if (data != previousData) {
     if (previousData == HIGH) {
+      //println("AAAA ", dataLength, " ", signalDuration);
       dataLength++;
     }
     signalDuration = 0;
@@ -50,7 +53,7 @@ void changeState(State state, bool resetCountersFlag=true) {
       ledTurnOn();
       writeState("connected");
       break;
-    case RECEIVING_DATA:
+    case RECEIVING_FIRST_DIGIT:
       writeState("receiving data");
       break;
   }
@@ -59,13 +62,24 @@ void changeState(State state, bool resetCountersFlag=true) {
     resetCounters();
 }
 
-void flatReceived() {
-  int flat = dataLength/2;
+void firstDigitReceived() {
+  println("| 1 data length: ", dataLength);
+  flat = dataLength*10;
+}
 
-  if (flat < 1)
-    return;
+void secondDigitReceived() {
+  if (dataLength == 11) {
+    dataLength = 1;
+  }
 
-  println("| data length: ", dataLength);
+  flat += dataLength;
+  flat -= 1;
+
+  if (flat > 100 && flat < 110) {
+    flat -= 100;
+  }
+
+  println("| 2 data length: ", dataLength);
   println("| flat: ", flat);
   publishToMQTT(FLAT_NUMBER_MQTT_TOPIC, flat);
 }
@@ -87,24 +101,43 @@ void updateStateMachine(int data) {
         }
       } else if (data == HIGH) {
         if (countZeros >= INITIALIZING_CALL_THRESHOLD) {
-          changeState(RECEIVING_DATA);
+          changeState(RECEIVING_FIRST_DIGIT);
         }
       }
       break;
 
-    case RECEIVING_DATA:
-      receiveData(data);
+    case RECEIVING_FIRST_DIGIT:
+      receiveDigit(data);
 
       if (data == LOW) {
         countOnes = 0;
         countZeros++;
-        if (countZeros >= DATA_RECEIVED_THESHOLD) {
-          flatReceived();
-          changeState(DATA_RECEIVED);
-        }
       } else if (data == HIGH) {
         countZeros = 0;
         countOnes++;
+        if (countOnes >= DATA_RECEIVED_THESHOLD) {
+          firstDigitReceived();
+          changeState(RECEIVING_SECOND_DIGIT);
+        }
+        if (countOnes >= CONNECTED_THRESHOLD) {
+          changeState(CONNECTED);
+        }
+      }
+      break;
+
+    case RECEIVING_SECOND_DIGIT:
+      receiveDigit(data);
+
+      if (data == LOW) {
+        countOnes = 0;
+        countZeros++;
+      } else if (data == HIGH) {
+        countZeros = 0;
+        countOnes++;
+        if (countOnes >= DATA_RECEIVED_THESHOLD) {
+          secondDigitReceived();
+          changeState(DATA_RECEIVED);
+        }
         if (countOnes >= CONNECTED_THRESHOLD) {
           changeState(CONNECTED);
         }

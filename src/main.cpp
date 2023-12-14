@@ -26,14 +26,24 @@ int data = 0;
 
 bool flag = false;
 
+void IRAM_ATTR one() {
+  flag = true;
+}
+
+void IRAM_ATTR zero() {
+  flag = false;
+}
+
 void setup() {
   Serial.begin(115200);
 
   WiFi.onEvent(WiFiEvent);  
 
-  pinMode(DATA_PIN, INPUT);
+  pinMode(DATA_PIN, INPUT_PULLUP);
   pinMode(LED_PIN, OUTPUT);
   pinMode(DRY_CONT_PIN, OUTPUT);
+  attachInterrupt(DATA_PIN, one, RISING);
+  attachInterrupt(DATA_PIN, zero, FALLING);
 
   digitalWrite(LED_PIN, HIGH);
 
