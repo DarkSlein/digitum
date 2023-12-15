@@ -24,7 +24,7 @@ void resetCounters() {
 }
 
 void writeState(char* message) {
-  //println(message);
+  println(message);
   publishToMQTT(STATE_MQTT_TOPIC, message);
 }
 

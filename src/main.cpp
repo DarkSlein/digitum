@@ -16,8 +16,10 @@
 #include "infra/fs.h"
 #include "infra/httpServer.h"
 
-#include "domain/stateMachine.h"
 #include "app/routes.h"
+
+#include "domain/stateMachineController.h"
+#include "domain/strategies/cyfralStrategy.h"
 
 uint32_t lastMillis;
 uint64_t lastMicros;
@@ -25,13 +27,22 @@ uint64_t lastMicros;
 int data = 0;
 
 bool flag = false;
+int zeros = 0;
+int ones = 0;
+
+StateMachineController controller;
+CyfralStrategy strategy;
 
 void IRAM_ATTR one() {
   flag = true;
+  //zeros = 0;
+  ones += 1;
 }
 
 void IRAM_ATTR zero() {
   flag = false;
+  //ones = 0;
+  zeros += 1;
 }
 
 void setup() {
@@ -60,12 +71,14 @@ void setup() {
   initMQTT();
   initRoutes();
   initHttpServer();
+
+  controller.setStrategy(&strategy);
 }
 
 void loop() {
   if (lastMicros < micros()) {
     data = digitalRead(DATA_PIN);
-    updateStateMachine(data);
+    controller.updateStateMachine(data);
 
     if (PRINT_RAW_SIGNAL_FLAG)
       printf("{}", data);

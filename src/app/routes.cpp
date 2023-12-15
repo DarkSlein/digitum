@@ -244,6 +244,8 @@ void initRoutes() {
   server.on("/api/v1/networkSettings", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, networkSettingsUpdate);
 
   server.on("/api/v1/intercomStatus", intercomStatus);
+  //server.on("/api/v1/intercomSettings", HTTP_GET, intercomSettingsRead);
+  //server.on("/api/v1/intercomSettings", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, intercomSettingsUpdate);
 
   server.on("/api/v1/mqttStatus", mqttStatus);
   server.on("/api/v1/mqttSettings", HTTP_GET, mqttSettingsRead);
