@@ -11,7 +11,7 @@ import { Layout, RequireAdmin } from './components';
 import ProjectRouting from './project/ProjectRouting';
 
 import NetworkConnection from './framework/network/NetworkConnection';
-import AccessPoint from './framework/ap/AccessPoint';
+import Intercom from './framework/intercom/Intercom';
 import NetworkTime from './framework/ntp/NetworkTime';
 import Mqtt from './framework/mqtt/Mqtt';
 import System from './framework/system/System';
@@ -42,7 +42,7 @@ const AuthenticatedRouting: FC = () => {
           <Route path={`/${PROJECT_PATH}/*`} element={<ProjectRouting />} />
         )}
         <Route path="/network/*" element={<NetworkConnection />} />
-        <Route path="/intercom/*" element={<AccessPoint />} />
+        <Route path="/intercom/*" element={<Intercom />} />
         {features.ntp && (
           <Route path="/ntp/*" element={<NetworkTime />} />
         )}

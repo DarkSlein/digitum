@@ -1,4 +1,4 @@
-export * from './ap';
+export * from './intercom';
 export * from './authentication';
 export * from './mqtt';
 export * from './ntp';

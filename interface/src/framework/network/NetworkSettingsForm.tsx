@@ -1,18 +1,15 @@
 import { FC, useContext, useEffect, useState } from 'react';
 import { ValidateFieldsError } from 'async-validator';
 
-import { Avatar, Button, Checkbox, IconButton, List, ListItem, ListItemAvatar, ListItemSecondaryAction, ListItemText } from '@mui/material';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Button, Checkbox } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 
 import * as NetworkApi from "../../api/network";
 import { NetworkSettings } from '../../types';
-import { BlockFormControlLabel, ButtonRow, FormLoader, SectionContent, ValidatedPasswordField, ValidatedTextField } from '../../components';
+import { BlockFormControlLabel, ButtonRow, FormLoader, SectionContent, ValidatedTextField } from '../../components';
 import { validate, createNetworkSettingsValidator } from '../../validators';
 import { updateValue, useRest } from '../../utils';
 
-import { isNetworkOpen, networkSecurityMode } from './NetworkSelector';
 import { NetworkConnectionContext } from './NetworkConnectionContext';
 
 const NetworkSettingsForm: FC = () => {

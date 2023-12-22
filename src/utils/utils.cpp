@@ -9,3 +9,7 @@ String requestDataToStr(uint8_t *data, size_t len) {
 
   return str;
 }
+
+unsigned long secondsToMilliseconds(int seconds) {
+  return static_cast<unsigned long>(seconds) * 1000;
+}

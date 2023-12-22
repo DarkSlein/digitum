@@ -1,4 +1,5 @@
 #include "domain/strategies/vizitStrategy.h"
+#include "domain/intercomJournal.h"
 
 VizitStrategy::VizitStrategy() {}
 
@@ -130,13 +131,16 @@ void VizitStrategy::_changeState(State state, bool resetCountersFlag) {
     case NOT_CONNECTED:
       ledTurnOff();
       _writeState("not connected");
+      _status = IntercomConnectionStatus::NOT_CONNECTED;
       break;
     case CONNECTED:
       ledTurnOn();
       _writeState("connected");
+      _status = IntercomConnectionStatus::CONNECTED;
       break;
     case RECEIVING_FIRST_DIGIT:
       _writeState("receiving data");
+      _status = IntercomConnectionStatus::RECEIVING_DATA;
       break;
   }
 
@@ -164,6 +168,9 @@ void VizitStrategy::_secondDigitReceived() {
   println("| 2 data length: ", _dataLength);
   println("| flat: ", _flat);
   publishToMQTT(FLAT_NUMBER_MQTT_TOPIC, _flat);
+
+  unsigned long createdAt = timeModule.getCurrentTime();
+  addFlatToIntercomJournal(createdAt, _flat);
 }
 
 void VizitStrategy::_initStateMachine() {

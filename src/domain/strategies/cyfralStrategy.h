@@ -1,8 +1,11 @@
 #include "utils/print.h"
+#include "utils/time.h"
 #include "config/config.h"
 #include "infra/mqtt.h"
 #include "infra/led.h"
 #include "domain/stateMachineStrategy.h"
+
+extern Time& timeModule;
 
 class CyfralStrategy : public StateMachineStrategy {
 private:

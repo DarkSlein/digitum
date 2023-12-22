@@ -17,6 +17,7 @@ export const extractEventValue = (event: React.ChangeEvent<HTMLInputElement>) =>
 
 export const updateValue = <S>(updateEntity: UpdateEntity<S>) => (
   (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(event.target.name);
     updateEntity((prevState) => ({
       ...prevState,
       [event.target.name]: extractEventValue(event)

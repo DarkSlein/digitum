@@ -1,5 +1,8 @@
 #include "domain/stateMachineController.h"
 
+StateMachineController StateMachineController::instance;
+StateMachineController& stateMachineController = StateMachineController::getInstance();
+
 StateMachineController::StateMachineController() : _strategy(nullptr) {}
 
 void StateMachineController::setStrategy(StateMachineStrategy* newStrategy) {
@@ -20,8 +23,23 @@ void StateMachineController::updateStateMachine(int data) {
 }
 
 StateMachineController::~StateMachineController() {
-  // Cleanup the strategy in the destructor
   if (_strategy) {
     delete _strategy;
   }
+}
+
+StateMachineController& StateMachineController::getInstance() {
+  return instance;
+}
+
+IntercomConnectionStatus StateMachineController::getStatus() {
+  return _strategy->getStatus();
+}
+
+int StateMachineController::getLastCalledNumber() {
+  return _strategy->getFlat();
+}
+
+DoorStatus getDoorStatus() {
+  return DoorStatus::CLOSED;
 }

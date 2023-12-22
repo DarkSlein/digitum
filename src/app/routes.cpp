@@ -1,13 +1,15 @@
 #include "app/routes.h"
+#include "config/config.h"
+#include "utils/print.h"
+#include "utils/settings.h"
+#include "utils/utils.h"
 #include "infra/eth.h"
 #include "infra/httpServer.h"
 #include "infra/mqtt.h"
 #include "infra/relay.h"
 #include "infra/fs.h"
-#include "config/config.h"
-#include "utils/print.h"
-#include "utils/settings.h"
-#include "utils/utils.h"
+#include "infra/intercom.h"
+#include "domain/intercomJournal.h"
 
 void handleDoorOpen(AsyncWebServerRequest *request) {
   relayTurnOn();
@@ -37,13 +39,101 @@ void intercomStatus(AsyncWebServerRequest* request) {
   AsyncJsonResponse* response = new AsyncJsonResponse(false, MAX_INTERCOM_STATUS_SIZE);
   JsonObject root = response->getRoot();
 
-  root["status"] = 0;
-  root["ip_address"] = ETH.localIP().toString();
-  root["mac_address"] = ETH.macAddress();
-  root["station_num"] = WiFi.softAPgetStationNum();
+  root["status"] = (int) getIntercomStatus();
+  root["lastCalledNumber"] = getLastCalledNumber();
+  root["doorStatus"] = false;
 
   response->setLength();
   request->send(response);
+}
+
+static void intercomSettingsRead(AsyncWebServerRequest* request) {
+  AsyncJsonResponse* response = new AsyncJsonResponse(false, MAX_INTERCOM_SETTINGS_SIZE);
+  JsonObject root = response->getRoot();
+
+  const size_t CAPACITY = JSON_ARRAY_SIZE(3);
+  StaticJsonDocument<CAPACITY> modelsDoc;
+
+  JsonArray models = modelsDoc.to<JsonArray>();
+  models.add("Vizit");
+  models.add("Cyfral");
+
+  root["kmnModel"] = "Vizit";
+  root["firstAppartment"] = 1;
+  root["kmnModelList"] = models;
+
+  response->setLength();
+  request->send(response);
+}
+
+static void intercomJournalRead(AsyncWebServerRequest* request) {
+  AsyncJsonResponse* response = new AsyncJsonResponse(false, MAX_INTERCOM_JOURNAL_SIZE);
+  JsonObject root = response->getRoot();
+
+  const size_t CAPACITY = JSON_ARRAY_SIZE(5*INTERCOM_JOURNAL_FLATS_NUMBER);
+  StaticJsonDocument<CAPACITY> flatsDoc;
+
+  JsonArray flats = flatsDoc.to<JsonArray>();
+  getIntercomJournalAsJson(flats);
+
+  root["notes"] = flats;
+
+  response->setLength();
+  request->send(response);
+}
+
+static void intercomSettingsUpdate(AsyncWebServerRequest *request, 
+uint8_t *data, size_t len, size_t index, size_t total) {
+  DynamicJsonDocument jsonDoc(MAX_INTERCOM_SETTINGS_SIZE);
+  String jsonStr = requestDataToStr(data, len);
+  DeserializationError error = deserializeJson(jsonDoc, jsonStr);
+
+  if (!jsonDoc.is<JsonVariant>()) {
+    request->send(400);
+    return;
+  }
+
+  JsonVariant root = jsonDoc.as<JsonVariant>();
+
+  bool success = writeJsonVariantToFile(INTERCOM_SETTINGS_PATH, root);
+
+  if (success) {
+    String jsonString;
+    serializeJson(root, jsonString);
+    request->send(200, "application/json", jsonString.c_str());
+  }
+  else
+    request->send(500, "text/plain", "Intercom settings not updated");
+
+  configureIntercom(
+    root["kmnModel"].as<String>(),
+    root["firstAppartment"].as<int>()
+  );
+}
+
+static void switchDoor(AsyncWebServerRequest *request, 
+uint8_t *data, size_t len, size_t index, size_t total) {
+  DynamicJsonDocument jsonDoc(MAX_INTERCOM_SWITCH_DOOR_SIZE);
+  String jsonStr = requestDataToStr(data, len);
+  DeserializationError error = deserializeJson(jsonDoc, jsonStr);
+
+  if (!jsonDoc.is<JsonVariant>()) {
+    request->send(400);
+    return;
+  }
+
+  JsonVariant root = jsonDoc.as<JsonVariant>();
+
+  SwitchDoorType switchDoorType = static_cast<SwitchDoorType>(root["type"].as<int>());
+  DoorStatus doorStatus = static_cast<DoorStatus>(root["status"].as<int>());
+
+  switchRelay(
+    switchDoorType,
+    doorStatus,
+    root["time"]
+  );
+
+  request->send(200, "application/json");
 }
 
 void networkStatus(AsyncWebServerRequest* request) {
@@ -244,8 +334,10 @@ void initRoutes() {
   server.on("/api/v1/networkSettings", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, networkSettingsUpdate);
 
   server.on("/api/v1/intercomStatus", intercomStatus);
-  //server.on("/api/v1/intercomSettings", HTTP_GET, intercomSettingsRead);
-  //server.on("/api/v1/intercomSettings", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, intercomSettingsUpdate);
+  server.on("/api/v1/intercomJournal", intercomJournalRead);
+  server.on("/api/v1/intercomSettings", HTTP_GET, intercomSettingsRead);
+  server.on("/api/v1/intercomSettings", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, intercomSettingsUpdate);
+  server.on("/api/v1/switchDoor", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, switchDoor);
 
   server.on("/api/v1/mqttStatus", mqttStatus);
   server.on("/api/v1/mqttSettings", HTTP_GET, mqttSettingsRead);

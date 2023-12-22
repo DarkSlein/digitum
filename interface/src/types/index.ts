@@ -1,4 +1,4 @@
-export * from './ap';
+export * from './intercom';
 export * from './features';
 export * from './me';
 export * from './mqtt';

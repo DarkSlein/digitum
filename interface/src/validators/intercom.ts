@@ -1,13 +1,12 @@
 import Schema from 'async-validator';
 
-import { APSettings } from '../types';
-import { isAPEnabled } from '../framework/ap/APSettingsForm';
+import { IntercomSettings } from '../types';
 
 import { IP_ADDRESS_VALIDATOR } from './shared';
 
-export const createAPSettingsValidator = (apSettings: APSettings) => new Schema({
+export const createIntercomSettingsValidator = (intercomSettings: IntercomSettings) => new Schema({
   provision_mode: { required: true, message: "Please provide a provision mode" },
-  ...(isAPEnabled(apSettings) && {
+  ...({
     ssid: [
       { required: true, message: "Please provide an SSID" },
       { type: "string", max: 32, message: "SSID must be 32 characters or less" }

@@ -1,4 +1,5 @@
 #include "domain/strategies/cyfralStrategy.h"
+#include "domain/intercomJournal.h"
 
 CyfralStrategy::CyfralStrategy() {}
 
@@ -111,13 +112,16 @@ void CyfralStrategy::_changeState(State state, bool resetCountersFlag) {
     case NOT_CONNECTED:
       ledTurnOff();
       _writeState("not connected");
+      _status = IntercomConnectionStatus::NOT_CONNECTED;
       break;
     case CONNECTED:
       ledTurnOn();
       _writeState("connected");
+      _status = IntercomConnectionStatus::CONNECTED;
       break;
     case RECEIVING_DATA:
       _writeState("receiving data");
+      _status = IntercomConnectionStatus::RECEIVING_DATA;
       break;
   }
 
@@ -126,14 +130,17 @@ void CyfralStrategy::_changeState(State state, bool resetCountersFlag) {
 }
 
 void CyfralStrategy::_flatReceived() {
-  int flat = _dataLength/2;
+  _flat = _dataLength/2;
 
-  if (flat < 1)
+  if (_flat < 1)
     return;
 
   println("| data length: ", _dataLength);
-  println("| flat: ", flat);
-  publishToMQTT(FLAT_NUMBER_MQTT_TOPIC, flat);
+  println("| flat: ", _flat);
+  publishToMQTT(FLAT_NUMBER_MQTT_TOPIC, _flat);
+
+  unsigned long createdAt = timeModule.getCurrentTime();
+  addFlatToIntercomJournal(createdAt, _flat);
 }
 
 void CyfralStrategy::_initStateMachine() {

@@ -1,8 +1,11 @@
 #include "utils/print.h"
+#include "utils/time.h"
 #include "config/config.h"
 #include "infra/mqtt.h"
 #include "infra/led.h"
 #include "domain/stateMachineStrategy.h"
+
+extern Time& timeModule;
 
 class VizitStrategy : public StateMachineStrategy {
 private:
@@ -28,8 +31,6 @@ private:
   int _previousData = 0;
   int _dataLength = 0;
   int _signalDuration = 0;
-
-  int _flat = 0;
 
   void _resetCounters();
   void _writeState(char* message);

@@ -6,10 +6,11 @@ import { Tab } from '@mui/material';
 import { RequireAdmin, RouterTabs, useLayoutTitle, useRouterTab } from '../../components';
 import { AuthenticatedContext } from '../../contexts/authentication';
 
-import APStatusForm from './APStatusForm';
-import APSettingsForm from './APSettingsForm';
+import IntercomStatusForm from './IntercomStatusForm';
+import IntercomJournalForm from './IntercomJournalForm';
+import IntercomSettingsForm from './IntercomSettingsForm';
 
-const AccessPoint: FC = () => {
+const Intercom: FC = () => {
   useLayoutTitle("Access Point");
 
   const authenticatedContext = useContext(AuthenticatedContext);
@@ -19,15 +20,17 @@ const AccessPoint: FC = () => {
     <>
       <RouterTabs value={routerTab}>
         <Tab value="status" label="Intercom Status" />
+        <Tab value="journal" label="Intercom Journal" />
         <Tab value="settings" label="Intercom Settings" disabled={!authenticatedContext.me.admin} />
       </RouterTabs>
       <Routes>
-        <Route path="status" element={<APStatusForm />} />
+        <Route path="status" element={<IntercomStatusForm />} />
+        <Route path="journal" element={<IntercomJournalForm />} />
         <Route
           path="settings"
           element={
             <RequireAdmin>
-              <APSettingsForm />
+              <IntercomSettingsForm />
             </RequireAdmin>
           }
         />
@@ -38,4 +41,4 @@ const AccessPoint: FC = () => {
 
 };
 
-export default AccessPoint;
+export default Intercom;

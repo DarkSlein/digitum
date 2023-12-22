@@ -30,7 +30,7 @@ bool flag = false;
 int zeros = 0;
 int ones = 0;
 
-StateMachineController controller;
+extern StateMachineController& stateMachineController;
 CyfralStrategy strategy;
 
 void IRAM_ATTR one() {
@@ -72,13 +72,13 @@ void setup() {
   initRoutes();
   initHttpServer();
 
-  controller.setStrategy(&strategy);
+  stateMachineController.setStrategy(&strategy);
 }
 
 void loop() {
   if (lastMicros < micros()) {
     data = digitalRead(DATA_PIN);
-    controller.updateStateMachine(data);
+    stateMachineController.updateStateMachine(data);
 
     if (PRINT_RAW_SIGNAL_FLAG)
       printf("{}", data);
