@@ -8,10 +8,9 @@ AsyncMqttClient mqttClient;
 TimerHandle_t mqttReconnectTimer;
 AsyncMqttClientDisconnectReason mqttDisconnectReason;
 
-DynamicJsonDocument mqttConf(1024);
 String mqttOutputJson = "";
 bool mqttConnected = false;
-bool mqttEnabled = true;
+bool mqttEnabled = false;
 
 // Pointers to hold retained copies of the mqtt client connection strings.
 // This is required as AsyncMqttClient holds refrences to the supplied connection strings.
@@ -36,7 +35,7 @@ void publishJSONToMQTT(const char* topic, T message) {
 }
 
 const char* getFullTopic(const char* topic) {
-  return (String(DEFAULT_OUTPUT_TOPIC_PATH) + String(topic)).c_str();
+  return (String(FACTORY_OUTPUT_TOPIC_PATH) + String(topic)).c_str();
 }
 
 void publishToMQTT(const char* topic, const char* message) {
@@ -245,16 +244,14 @@ void getDefaultMqttConf(JsonVariant& root) {
 }
 
 bool loadMqttConfig() {
-  bool success = readJsonVariantFromFile(MQTT_SETTINGS_PATH, mqttConf);
 
-  if (!success)
-    return false;
 }
 
 void reconnectMQTTIfNeeded() {
   if (!mqttClient.connected()) {
-    if (mqttConf.isNull()) 
-      loadMqttConfig();
+    DynamicJsonDocument mqttConf(1024);
+    if (!readJsonVariantFromFile(MQTT_SETTINGS_PATH, mqttConf))
+      return;
 
     JsonVariant root = mqttConf.as<JsonVariant>();
 

@@ -4,6 +4,7 @@
 
 enum class SwitchDoorType { ON_OFF, JOGGING, DELAY };
 enum class DoorStatus { OPENED, CLOSED };
+enum class KMNModel { CYFRAL, VIZIT };
 
 void relayTurnOn();
 void relayTurnOff();

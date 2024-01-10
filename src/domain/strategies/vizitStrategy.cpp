@@ -1,5 +1,5 @@
 #include "domain/strategies/vizitStrategy.h"
-#include "domain/intercomJournal.h"
+#include "domain/services/intercomJournal.h"
 
 VizitStrategy::VizitStrategy() {}
 

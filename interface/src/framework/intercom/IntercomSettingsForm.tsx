@@ -56,11 +56,11 @@ const IntercomSettingsForm: FC = () => {
         </ValidatedTextField>
         <ValidatedTextField
           fieldErrors={fieldErrors}
-          name="firstAppartment"
+          name="firstApartment"
           label="First Appartment"
           fullWidth
           variant="outlined"
-          value={data.firstAppartment}
+          value={data.firstApartment}
           onChange={updateFormValue}
           margin="normal"
         />

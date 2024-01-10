@@ -15,6 +15,7 @@
 #include "infra/relay.h"
 #include "infra/fs.h"
 #include "infra/httpServer.h"
+#include "infra/intercom.h"
 
 #include "app/routes.h"
 
@@ -31,7 +32,6 @@ int zeros = 0;
 int ones = 0;
 
 extern StateMachineController& stateMachineController;
-CyfralStrategy strategy;
 
 void IRAM_ATTR one() {
   flag = true;
@@ -71,8 +71,7 @@ void setup() {
   initMQTT();
   initRoutes();
   initHttpServer();
-
-  stateMachineController.setStrategy(&strategy);
+  initIntercom();
 }
 
 void loop() {

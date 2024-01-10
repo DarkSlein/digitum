@@ -42,7 +42,7 @@ String Time::getFormattedTimeAgo(unsigned long timeMillis) const {
 
   struct tm *timeStruct = gmtime(&currentTime);
 
-  if (timeStruct->tm_yday >= 0) {
+  if (timeStruct->tm_yday > 0) {
     return String(timeStruct->tm_yday) + " days ago";
   } else if (timeStruct->tm_hour > 0) {
     return String(timeStruct->tm_hour) + " hours ago";

@@ -16,7 +16,7 @@
 
 #define SERIAL_NUMBER "4823"
 
-#define DEFAULT_OUTPUT_TOPIC_PATH "/digitum/intercom_bridge4823/out/"
+#define FACTORY_OUTPUT_TOPIC_PATH "/digitum/intercom_bridge4823/out/"
 #define JSON_TOPIC_PATH "/digitum/intercom_bridge4823/out/json"
 
 #define MAC_ADDRESS_MQTT_TOPIC "mac"
@@ -48,8 +48,17 @@
 #define MAX_MQTT_STATUS_SIZE 1024
 #define MAX_MQTT_SETTINGS_SIZE 1024
 #define MAX_ESP_STATUS_SIZE 1024
+#define MAX_LOG_IN_SIZE 1024
 
 #define FS_CONFIG_DIRECTORY "/config"
 #define NETWORK_SETTINGS_PATH "/config/networkSettings.json"
 #define INTERCOM_SETTINGS_PATH "/config/intercomSettings.json"
 #define MQTT_SETTINGS_PATH "/config/mqttSettings.json"
+#define USERS_PATH "/config/users.json"
+
+#define JWT_SECRET_KEY "secret"
+#define FACTORY_ADMIN_USERNAME "admin"
+#define FACTORY_ADMIN_PASSWORD "admin"
+
+#define FACTORY_KMN_MODEL "Vizit"
+#define FACTORY_FIRST_APARTMENT 1

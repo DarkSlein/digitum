@@ -1,15 +1,20 @@
 #include "app/routes.h"
 #include "config/config.h"
+
 #include "utils/print.h"
 #include "utils/settings.h"
 #include "utils/utils.h"
+#include "utils/errorCodes.h"
+
 #include "infra/eth.h"
 #include "infra/httpServer.h"
 #include "infra/mqtt.h"
 #include "infra/relay.h"
 #include "infra/fs.h"
 #include "infra/intercom.h"
-#include "domain/intercomJournal.h"
+
+#include "domain/services/intercomJournal.h"
+#include "domain/services/auth.h"
 
 void handleDoorOpen(AsyncWebServerRequest *request) {
   relayTurnOn();
@@ -25,7 +30,7 @@ void getFeatures(AsyncWebServerRequest *request) {
   JsonObject root = response->getRoot();
 
   root["project"] = false;
-  root["security"] = false;
+  root["security"] = true;
   root["mqtt"] = true;
   root["ntp"] = false;
   root["ota"] = false;
@@ -47,25 +52,6 @@ void intercomStatus(AsyncWebServerRequest* request) {
   request->send(response);
 }
 
-static void intercomSettingsRead(AsyncWebServerRequest* request) {
-  AsyncJsonResponse* response = new AsyncJsonResponse(false, MAX_INTERCOM_SETTINGS_SIZE);
-  JsonObject root = response->getRoot();
-
-  const size_t CAPACITY = JSON_ARRAY_SIZE(3);
-  StaticJsonDocument<CAPACITY> modelsDoc;
-
-  JsonArray models = modelsDoc.to<JsonArray>();
-  models.add("Vizit");
-  models.add("Cyfral");
-
-  root["kmnModel"] = "Vizit";
-  root["firstAppartment"] = 1;
-  root["kmnModelList"] = models;
-
-  response->setLength();
-  request->send(response);
-}
-
 static void intercomJournalRead(AsyncWebServerRequest* request) {
   AsyncJsonResponse* response = new AsyncJsonResponse(false, MAX_INTERCOM_JOURNAL_SIZE);
   JsonObject root = response->getRoot();
@@ -82,8 +68,24 @@ static void intercomJournalRead(AsyncWebServerRequest* request) {
   request->send(response);
 }
 
+static void intercomSettingsRead(AsyncWebServerRequest* request) {
+  AsyncJsonResponse* response = new AsyncJsonResponse(false, MAX_INTERCOM_SETTINGS_SIZE);
+  DynamicJsonDocument doc(1024);
+
+  bool success = readJsonVariantFromFile(INTERCOM_SETTINGS_PATH, doc);
+  JsonVariant root = doc.as<JsonVariant>();
+
+  if (!success)
+    getDefaultIntercomConf(root);
+
+  String jsonString;
+  serializeJson(root, jsonString);
+  request->send(200, "application/json", jsonString.c_str());
+}
+
 static void intercomSettingsUpdate(AsyncWebServerRequest *request, 
 uint8_t *data, size_t len, size_t index, size_t total) {
+
   DynamicJsonDocument jsonDoc(MAX_INTERCOM_SETTINGS_SIZE);
   String jsonStr = requestDataToStr(data, len);
   DeserializationError error = deserializeJson(jsonDoc, jsonStr);
@@ -95,7 +97,7 @@ uint8_t *data, size_t len, size_t index, size_t total) {
 
   JsonVariant root = jsonDoc.as<JsonVariant>();
 
-  bool success = writeJsonVariantToFile(INTERCOM_SETTINGS_PATH, root);
+  bool success = writeJsonToFile(INTERCOM_SETTINGS_PATH, root);
 
   if (success) {
     String jsonString;
@@ -106,8 +108,8 @@ uint8_t *data, size_t len, size_t index, size_t total) {
     request->send(500, "text/plain", "Intercom settings not updated");
 
   configureIntercom(
-    root["kmnModel"].as<String>(),
-    root["firstAppartment"].as<int>()
+    root["kmnModel"],
+    root["firstApartment"]
   );
 }
 
@@ -173,6 +175,7 @@ static void networkSettingsRead(AsyncWebServerRequest* request) {
 
 static void networkSettingsUpdate(AsyncWebServerRequest *request, 
 uint8_t *data, size_t len, size_t index, size_t total) {
+
   DynamicJsonDocument jsonDoc(MAX_NETWORK_SETTINGS_SIZE);
   String jsonStr = requestDataToStr(data, len);
   DeserializationError error = deserializeJson(jsonDoc, jsonStr);
@@ -184,7 +187,7 @@ uint8_t *data, size_t len, size_t index, size_t total) {
 
   JsonVariant root = jsonDoc.as<JsonVariant>();
 
-  bool success = writeJsonVariantToFile(NETWORK_SETTINGS_PATH, root);
+  bool success = writeJsonToFile(NETWORK_SETTINGS_PATH, root);
 
   if (success) {
     String jsonString;
@@ -235,6 +238,7 @@ static void mqttSettingsRead(AsyncWebServerRequest* request) {
 
 static void mqttSettingsUpdate(AsyncWebServerRequest *request, 
 uint8_t *data, size_t len, size_t index, size_t total) {
+
   DynamicJsonDocument jsonDoc(MAX_MQTT_SETTINGS_SIZE);
   String jsonStr = requestDataToStr(data, len);
   DeserializationError error = deserializeJson(jsonDoc, jsonStr);
@@ -246,11 +250,8 @@ uint8_t *data, size_t len, size_t index, size_t total) {
 
   JsonVariant root = jsonDoc.as<JsonVariant>();
 
-  bool fileLoaded = writeJsonVariantToFile(MQTT_SETTINGS_PATH, root);
+  bool fileLoaded = writeJsonToFile(MQTT_SETTINGS_PATH, root);
   bool enabled = root["enabled"].as<bool>();
-
-  if (!loadMqttConfig())
-    println("Cannot load MQTT config");
 
   bool mqttConfigured = configureMqtt(
     root["enabled"].as<bool>(),
@@ -322,6 +323,53 @@ void factoryReset(AsyncWebServerRequest *request) {
   restartNow(request);
 }
 
+void verifyAuthorization(AsyncWebServerRequest *request) {
+  request->send(200, "text/plain", "OK");
+}
+
+static void signIn(AsyncWebServerRequest *request, 
+uint8_t *data, size_t len, size_t index, size_t total) {
+
+  DynamicJsonDocument jsonDoc(MAX_LOG_IN_SIZE);
+  String jsonStr = requestDataToStr(data, len);
+  println("Access token: ", jsonStr);
+  DeserializationError error = deserializeJson(jsonDoc, jsonStr);
+
+  if (!jsonDoc.is<JsonVariant>() || error) {
+    request->send(400);
+    return;
+  }
+
+  JsonVariant root = jsonDoc.as<JsonVariant>();
+
+  String accessToken;
+  StatusCode status = getAccessToken(
+    root["username"].as<String>(), 
+    root["password"].as<String>(),
+    accessToken
+  );
+  println("Access token: ", accessToken);
+
+  if (status == StatusCode::NOT_FOUND) {
+    request->send(403, "text/plain", "Authorization failed");
+  }
+
+  if (!accessToken) {
+    request->send(500, "text/plain", "Access token not generated");
+  } else {
+    DynamicJsonDocument jsonDoc(MAX_LOG_IN_SIZE);
+    JsonVariant res = jsonDoc.as<JsonVariant>();
+
+    res["access_token"] = accessToken;
+
+    String jsonString;
+    serializeJson(res, jsonString);
+    println("Sign in response: ", jsonString);
+
+    request->send(200, "application/json", jsonString.c_str());
+  }
+}
+
 void initRoutes() {
   AsyncWebServer& server = getServer();
   server.on("/api/v1/door/open", handleDoorOpen);
@@ -346,4 +394,7 @@ void initRoutes() {
   server.on("/api/v1/systemStatus", systemStatus);
   server.on("/api/v1/restart", restartNow);
   server.on("/api/v1/factoryReset", factoryReset);
+
+  server.on("/api/v1/verifyAuthorization", HTTP_GET, verifyAuthorization);
+  server.on("/api/v1/signIn", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, signIn);
 }

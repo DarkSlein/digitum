@@ -116,12 +116,12 @@ void configureEth(JsonVariant& root) {
 }
 
 void getDefaultEthConf(JsonVariant& root) {
-    root["static_ip_config"] = true;
-    root["local_ip"] = ETH.localIP().toString();
-    root["gateway_ip"] = ETH.gatewayIP().toString();
-    root["subnet_mask"] = ETH.subnetMask().toString();
-    root["dns_ip"] = ETH.dnsIP().toString();
-    root["dns_ip_2"] = ETH.dnsIP(1).toString();
+  root["static_ip_config"] = true;
+  root["local_ip"] = ETH.localIP().toString();
+  root["gateway_ip"] = ETH.gatewayIP().toString();
+  root["subnet_mask"] = ETH.subnetMask().toString();
+  root["dns_ip"] = ETH.dnsIP().toString();
+  root["dns_ip_2"] = ETH.dnsIP(1).toString();
 }
 
 void getEthStatus(JsonObject& root) {
@@ -162,30 +162,30 @@ bool loadEthConfig() {
 }
 
 void initEth() {
-    pinMode(NRST, OUTPUT);
-    digitalWrite(NRST, 0);
-    delay(200);
-    digitalWrite(NRST, 1);
-    delay(200);
-    digitalWrite(NRST, 0);
-    delay(200);
-    digitalWrite(NRST, 1);
-    delay(200);
+  pinMode(NRST, OUTPUT);
+  digitalWrite(NRST, 0);
+  delay(200);
+  digitalWrite(NRST, 1);
+  delay(200);
+  digitalWrite(NRST, 0);
+  delay(200);
+  digitalWrite(NRST, 1);
+  delay(200);
 
-    ETH.begin(ETH_ADDR,
-              ETH_POWER_PIN,
-              ETH_MDC_PIN,
-              ETH_MDIO_PIN,
-              ETH_TYPE,
-              ETH_CLK_MODE);
+  ETH.begin(ETH_ADDR,
+            ETH_POWER_PIN,
+            ETH_MDC_PIN,
+            ETH_MDIO_PIN,
+            ETH_TYPE,
+            ETH_CLK_MODE);
 
-    if (!loadEthConfig() && FACTORY_STATIC_LOCAL_IP) {
-        ETH.config(
-            FACTORY_STATIC_LOCAL_IP,
-            FACTORY_STATIC_GATEWAY,
-            FACTORY_STATIC_SUBNET
-        );
-    }
+  if (!loadEthConfig() && FACTORY_STATIC_LOCAL_IP) {
+    ETH.config(
+      FACTORY_STATIC_LOCAL_IP,
+      FACTORY_STATIC_GATEWAY,
+      FACTORY_STATIC_SUBNET
+    );
+  }
 }
 
 void testClient(const char * host, uint16_t port) {

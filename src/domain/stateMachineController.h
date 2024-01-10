@@ -21,4 +21,6 @@ public:
   IntercomConnectionStatus getStatus();
   int getLastCalledNumber();
   DoorStatus getDoorStatus();
+
+  void configure(KMNModel kmnModel, int firstApartment);
 };

@@ -1,5 +1,5 @@
 #include "domain/strategies/cyfralStrategy.h"
-#include "domain/intercomJournal.h"
+#include "domain/services/intercomJournal.h"
 
 CyfralStrategy::CyfralStrategy() {}
 

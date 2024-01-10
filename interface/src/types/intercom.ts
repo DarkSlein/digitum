@@ -33,7 +33,7 @@ export interface IntercomJournal {
 export interface IntercomSettings {
   kmnModel: string;
   kmnModelList: string[];
-  firstAppartment: number;
+  firstApartment: number;
 }
 
 export interface SwitchDoorDTO {

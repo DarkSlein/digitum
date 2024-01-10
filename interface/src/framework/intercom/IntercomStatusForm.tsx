@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 
 import { Avatar, Box, Button, Divider, List, ListItem, ListItemAvatar, ListItemText, Theme, useTheme } from "@mui/material";
 import PowerIcon from '@mui/icons-material/Power';
@@ -9,12 +9,12 @@ import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { useSnackbar } from "notistack";
 
 import * as IntercomApi from "../../api/intercom";
 import { DoorStatus, IntercomConnectionStatus, IntercomStatus, SwitchDoorType } from "../../types";
 import { ButtonRow, FormLoader, SectionContent } from "../../components";
-import { useRest } from "../../utils";
-import {useSnackbar} from "notistack";
+import { extractErrorMessage, useRest } from "../../utils";
 
 export const intercomStatusHighlight = ({ status }: IntercomStatus, theme: Theme) => {
   switch (status) {
@@ -77,25 +77,34 @@ export const doorStatus = (status: DoorStatus) => {
   }
 };
 
-export const openDoor = () => {
-  IntercomApi.switchDoor({
+export const openDoorApi = async () => {
+  await IntercomApi.switchDoor({
     type: SwitchDoorType.JOGGING,
     status: DoorStatus.OPENED,
     time: 1
   })
-  .then(() => {
-    const { enqueueSnackbar } = useSnackbar();
-    enqueueSnackbar("Update successful", { variant: 'success' });
-  })
-  .catch((error) => {
-    console.log(error);
-  });
 };
 
 const IntercomStatusForm: FC = () => {
   const { loadData, data, errorMessage } = useRest<IntercomStatus>({ read: IntercomApi.readIntercomStatus });
+  const { enqueueSnackbar } = useSnackbar();
+  const [confirmRestart, setConfirmRestart] = useState<boolean>(false);
+  const [processing, setProcessing] = useState<boolean>(false);
 
   const theme = useTheme();
+
+  const openDoor = async () => {
+    setProcessing(true);
+    try {
+      await openDoorApi();
+      enqueueSnackbar("Door is opened", { variant: 'success' });
+    } catch (error: any) {
+      enqueueSnackbar(extractErrorMessage(error, 'Problem restarting device'), { variant: 'error' });
+    } finally {
+      setConfirmRestart(false);
+      setProcessing(false);
+    }
+  };
 
   const content = () => {
     if (!data) {

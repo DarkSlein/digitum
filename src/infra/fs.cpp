@@ -50,7 +50,7 @@ bool createFolderIfNotExists(const char* file_path) {
   return LittleFS.mkdir(folder);
 }
 
-bool writeJsonVariantToFile(const char* file_path, JsonVariant& jsonVariant) {
+bool writeJsonToFile(const char* file_path, const JsonVariant& jsonValue) {
   createFolderIfNotExists(file_path);
 
   File file = LittleFS.open(file_path, "w");
@@ -61,8 +61,8 @@ bool writeJsonVariantToFile(const char* file_path, JsonVariant& jsonVariant) {
   }
 
   String jsonString;
-  serializeJson(jsonVariant, jsonString);
-  println("Writing config: ", file_path, ", content:", jsonString);
+  serializeJson(jsonValue, jsonString);
+  println("Writing config: ", file_path, ", content: ", jsonString);
   file.print(jsonString);
 
   file.close();

@@ -1,4 +1,6 @@
 #include "domain/stateMachineController.h"
+#include "strategies/cyfralStrategy.h"
+#include "strategies/vizitStrategy.h"
 
 StateMachineController StateMachineController::instance;
 StateMachineController& stateMachineController = StateMachineController::getInstance();
@@ -42,4 +44,15 @@ int StateMachineController::getLastCalledNumber() {
 
 DoorStatus getDoorStatus() {
   return DoorStatus::CLOSED;
+}
+
+void StateMachineController::configure(KMNModel kmnModel, int firstApartment) {
+  switch (kmnModel) {
+    case KMNModel::CYFRAL:
+      this->setStrategy(new CyfralStrategy());
+      break;
+    case KMNModel::VIZIT:
+      this->setStrategy(new VizitStrategy());
+      break;
+  }
 }

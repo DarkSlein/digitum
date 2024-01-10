@@ -1,4 +1,4 @@
-#include "domain/intercomJournal.h"
+#include "domain/services/intercomJournal.h"
 #include "utils/print.h"
 
 IntercomJournal _intercomJournal;
